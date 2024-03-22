@@ -55,6 +55,7 @@ class Assembler:
             else: 
                 raise ValueError(f"Invalid operand: {operand}")
 
+        # if the opcode is valid, call the proper function for interpretation
         if opcode in self.opcode_map:
             return self.opcode_map[opcode](operands)
         else:
@@ -65,8 +66,10 @@ class Assembler:
         return '0000000000000000'
     
     def handle_load(self, operands):
+        # check if there are 2 operands
         if len(operands) != 2:
             raise ValueError(f"LD opcode requires 2 operands, got {len(operands)}")
+        # check if operands are valid registers
         if operands[0] not in VALID_REGISTER_ADDRESSES:
             raise ValueError(f"Invalid register: {operands[0]}")
         if operands[1] not in range(0, 15):
@@ -75,8 +78,10 @@ class Assembler:
             return f"0001{VALID_REGISTER_ADDRESSES[operands[0]]}0000{operands[1]:04b}"
     
     def handle_move(self, operands):
+        # check if there are 2 operands
         if len(operands) != 2:
             raise ValueError(f"LD opcode requires 2 operands, got {len(operands)}")
+        # check if operands are valid registers
         if operands[0] not in VALID_REGISTER_ADDRESSES:
             raise ValueError(f"Invalid register: {operands[0]}")
         if operands[1] not in VALID_REGISTER_ADDRESSES:
@@ -86,41 +91,53 @@ class Assembler:
 
     
     def handle_display(self, operands):
+        # check if there are 2 operands
         if len(operands) != 2:
             raise ValueError(f"LD opcode requires 2 operands, got {len(operands)}")
+        # check if operands are valid registers
         if operands[0] not in VALID_REGISTER_ADDRESSES:
             raise ValueError(f"Invalid register: {operands[0]}")
         if operands[1] not in VALID_REGISTER_ADDRESSES:
             raise ValueError(f"Invalid register: {operands[1]}")
         else:
-            return = f"00110000{VALID_REGISTER_ADDRESSES[operands[0]]}{VALID_REGISTER_ADDRESSES[operands[1]]}"
+            return f"00110000{VALID_REGISTER_ADDRESSES[operands[0]]}{VALID_REGISTER_ADDRESSES[operands[1]]}"
     
     def handle_xor(self, operands):
+        return self.handle_binary_operation(operands, '0100')
+
+    def handle_and(self, operands):
+        return self.handle_binary_operation(operands, '0101')
+
+    def handle_or(self, operands):
+        return self.handle_binary_operation(operands, '0110')
+
+    def handle_add(self, operands):
+        return self.handle_binary_operation(operands, '0111')
+    
+    def handle_subtract(self, operands):
+        return self.handle_binary_operation(operands, '1111')
+
+    # handles all binary operations
+    def handle_binary_operation(self, operands, opcode):
+        # check if there are 2 or 3 operands
         if len(operands) not in range(2, 4):
-            raise ValueError(f"XOR opcode requires 2 or 3 operands, got {len(operands)}")
+            raise ValueError(f"{opcode} opcode requires 2 or 3 operands, got {len(operands)}")
+        # check if operands are valid registers
         if operands[0] not in VALID_REGISTER_ADDRESSES:
             raise ValueError(f"Invalid register: {operands[0]}")
         if operands[1] not in VALID_REGISTER_ADDRESSES:
             raise ValueError(f"Invalid register: {operands[1]}")
+        # check if operand exists and is a valid register
         if len(operands) == 3 and operands[2] not in VALID_REGISTER_ADDRESSES:
             raise ValueError(f"Invalid register: {operands[2]}")
         else:
-            destination_register = operands[0]
-            operand_register_1 = operands[1]
+            destination_register = operands[0]  # destination register is always the first operand
+            operand_register_1 = operands[1]    # the second operand is always an operand of the operation
+
+            # if there are 3 operands, the third operand is the second operand of the operation
             if len(operands) == 3:
                 operand_register_2 = operands[2]
+            # if there are 2 operands, the first operand is the second operand of the operation
             else:
                 operand_register_2 = operands[1]
-            return f"0100{VALID_REGISTER_ADDRESSES[destination_register]}{VALID_REGISTER_ADDRESSES[operand_register_1]}{VALID_REGISTER_ADDRESSES[operand_register_2]}"
-    
-    def handle_and(self, operands):
-        return '0101'
-    
-    def handle_or(self, operands):
-        return '0110'
-    
-    def handle_add(self, operands):
-        return '0111'
-    
-    def handle_subtract(self, operands):
-        return '1000'
+            return f"{opcode}{VALID_REGISTER_ADDRESSES[destination_register]}{VALID_REGISTER_ADDRESSES[operand_register_2]}{VALID_REGISTER_ADDRESSES[operand_register_1]}"
