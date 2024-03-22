@@ -1,3 +1,16 @@
+import re
+
+VALID_REGISTER_ADDRESSES = {
+    'R0': '0000',
+    'R1': '0001',
+    'R2': '0010',
+    'R3': '0011',
+    'R4': '0100',
+    'R5': '0101',
+    'R6': '0110',
+    'R7': '0111'
+}
+
 class Assembler:
     def __init__(self):
         # define map with callback functions for each opcode
@@ -14,10 +27,32 @@ class Assembler:
         }
 
     def assemble(self, instruction):
+        # split instruction into opcode and operands
         instruction_parts = instruction.split(' ')
         opcode = instruction_parts[0]
         operands = instruction_parts[1:]
+
+        # check if opcode requires operands
+        if not operands and opcode != 'NOP':
+            raise ValueError(f"Opcode {opcode} requires operands")
         
+        # convert operands to integers or register names
+        for i, operand in enumerate(operands):
+            # hexadecimal
+            if re.match(r"0x[a-fA-F0-9]+", operand):
+                operands[i] = int(operand, 16)
+            # decimal
+            elif re.match(r"\d+", operand):
+                operands[i] = int(operand)
+            # binary
+            elif re.match(r"0b[01]+", operand):
+                operands[i] = int(operand, 2)
+            # register
+            elif operand in VALID_REGISTER_ADDRESSES:
+                pass
+            else: 
+                raise ValueError(f"Invalid operand: {operand}")
+
         if opcode.upper() in self.opcode_map:
             return self.opcode_map[opcode](operands)
         else:
