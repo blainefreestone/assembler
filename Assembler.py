@@ -29,7 +29,7 @@ class Assembler:
     def assemble(self, instruction):
         # split instruction into opcode and operands
         instruction_parts = instruction.split(' ')
-        opcode = instruction_parts[0]
+        opcode = instruction_parts[0].upper()
         operands = instruction_parts[1:]
 
         # check if opcode requires operands
@@ -48,12 +48,12 @@ class Assembler:
             elif re.match(r"0b[01]+", operand):
                 operands[i] = int(operand, 2)
             # register
-            elif operand in VALID_REGISTER_ADDRESSES:
+            elif operand.upper() in VALID_REGISTER_ADDRESSES:
                 pass
             else: 
                 raise ValueError(f"Invalid operand: {operand}")
 
-        if opcode.upper() in self.opcode_map:
+        if opcode in self.opcode_map:
             return self.opcode_map[opcode](operands)
         else:
             raise ValueError(f"Unknown opcode: {opcode}")
@@ -63,10 +63,23 @@ class Assembler:
         return '0000000000000000'
     
     def handle_load(self, operands):
-        return '0001'
+        if operands[0] not in VALID_REGISTER_ADDRESSES:
+            raise ValueError(f"Invalid register: {operands[0]}")
+        if operands[1] not in range(0, 7):
+            raise ValueError(f"Invalid data value: {operands[1]}")
+        else:
+            machine_code = f"0001{VALID_REGISTER_ADDRESSES[operands[0]]}0000{operands[1]:04b}"
+            return machine_code
     
     def handle_move(self, operands):
-        return '0010'
+        if operands[0] not in VALID_REGISTER_ADDRESSES:
+            raise ValueError(f"Invalid register: {operands[0]}")
+        if operands[1] not in VALID_REGISTER_ADDRESSES:
+            raise ValueError(f"Invalid register: {operands[1]}")
+        else:
+            machine_code = f"0010{VALID_REGISTER_ADDRESSES[operands[0]]}{VALID_REGISTER_ADDRESSES[operands[1]]}0000"
+            return machine_code
+
     
     def handle_display(self, operands):
         return '0011'
@@ -85,3 +98,6 @@ class Assembler:
     
     def handle_subtract(self, operands):
         return '1000'
+    
+assembler = Assembler()
+print(assembler.assemble('ld R1 0x2'))
